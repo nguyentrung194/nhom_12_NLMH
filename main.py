@@ -58,22 +58,14 @@ def accuracy_metric(actual, predicted):
 	return correct / float(len(actual)) * 100.0
  
 # Evaluate an algorithm using a cross validation split
-def evaluate_algorithm(dataset, algorithm, n_folds, *args):
-	folds = cross_validation_split(dataset, n_folds)
+def evaluate_algorithm(dataset, algorithm, *args):
 	scores = list()
-	for fold in folds:
-		train_set = list(folds)
-		train_set.remove(fold)
-		train_set = sum(train_set, [])
-		test_set = list()
-		for row in fold:
-			row_copy = list(row)
-			test_set.append(row_copy)
-			row_copy[-1] = None
-		predicted = algorithm(train_set, test_set, *args)
-		actual = [row[-1] for row in fold]
-		accuracy = accuracy_metric(actual, predicted)
-		scores.append(accuracy)
+	train_set = dataset[:576]
+	test_set = dataset[577:673]
+	predicted = algorithm(train_set, test_set, *args)
+	actual = [row[-1] for row in test_set]
+	accuracy = accuracy_metric(actual, predicted)
+	scores.append(accuracy)
 	return scores
  
 # Make a prediction with coefficients
@@ -116,9 +108,9 @@ for i in range(len(dataset[0])):
 minmax = dataset_minmax(dataset)
 normalize_dataset(dataset, minmax)
 # evaluate algorithm
-n_folds = 5
+# Pregnancies,Glucose,BloodPressure,SkinThickness,Insulin,BMI,DiabetesPedigreeFunction,Age,Outcome
 l_rate = 0.1
 n_epoch = 100
-scores = evaluate_algorithm(dataset, logistic_regression, n_folds, l_rate, n_epoch)
+scores = evaluate_algorithm(dataset, logistic_regression, l_rate, n_epoch)
 print('Scores: %s' % scores)
 print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
