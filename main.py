@@ -35,19 +35,7 @@ def normalize_dataset(dataset, minmax):
 	for row in dataset:
 		for i in range(len(row)):
 			row[i] = (row[i] - minmax[i][0]) / (minmax[i][1] - minmax[i][0])
- 
-# Split a dataset into k folds
-def cross_validation_split(dataset, n_folds):
-	dataset_split = list()
-	dataset_copy = list(dataset)
-	fold_size = int(len(dataset) / n_folds)
-	for i in range(n_folds):
-		fold = list()
-		while len(fold) < fold_size:
-			index = randrange(len(dataset_copy))
-			fold.append(dataset_copy.pop(index))
-		dataset_split.append(fold)
-	return dataset_split
+
  
 # Calculate accuracy percentage
 def accuracy_metric(actual, predicted):
@@ -60,8 +48,8 @@ def accuracy_metric(actual, predicted):
 # Evaluate an algorithm using a cross validation split
 def evaluate_algorithm(dataset, algorithm, *args):
 	scores = list()
-	train_set = dataset[:576]
-	test_set = dataset[577:673]
+	train_set = dataset[:500]
+	test_set = dataset[501:]
 	predicted = algorithm(train_set, test_set, *args)
 	actual = [row[-1] for row in test_set]
 	accuracy = accuracy_metric(actual, predicted)
@@ -95,7 +83,7 @@ def logistic_regression(train, test, l_rate, n_epoch):
 		yhat = predict(row, coef)
 		yhat = round(yhat)
 		predictions.append(yhat)
-	return(predictions)
+	return (predictions)
  
 # Test the logistic regression algorithm on the diabetes dataset
 seed(1)
