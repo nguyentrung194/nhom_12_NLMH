@@ -3,7 +3,8 @@ from random import seed
 from random import randrange
 from csv import reader
 from math import exp
- 
+import random
+
 # Load a CSV file
 def load_csv(filename):
 	dataset = list()
@@ -14,12 +15,13 @@ def load_csv(filename):
 				continue
 			dataset.append(row)
 	return dataset
- 
+
 # Convert string column to float
 def str_column_to_float(dataset, column):
 	for row in dataset:
 		row[column] = float(row[column].strip())
- 
+
+
 # Find the min and max values for each column
 def dataset_minmax(dataset):
 	minmax = list()
@@ -29,14 +31,25 @@ def dataset_minmax(dataset):
 		value_max = max(col_values)
 		minmax.append([value_min, value_max])
 	return minmax
- 
+
 # Rescale dataset columns to the range 0-1
 def normalize_dataset(dataset, minmax):
 	for row in dataset:
 		for i in range(len(row)):
 			row[i] = (row[i] - minmax[i][0]) / (minmax[i][1] - minmax[i][0])
 
- 
+
+
+def cross_validation_split2(dataset, test_rate, val_rate):
+  random.shuffle(dataset)
+  size=len(dataset)
+  train_size=size - round(size*(test_rate + val_rate))
+  train = dataset[0:train_size]
+  test_size =train_size + int(size*test_rate)
+  test = dataset[train_size:test_size]
+  val = dataset[test_size:-1]
+  return train,test,val
+
 # Calculate accuracy percentage
 def accuracy_metric(actual, predicted):
 	correct = 0
@@ -44,25 +57,102 @@ def accuracy_metric(actual, predicted):
 		if actual[i] == predicted[i]:
 			correct += 1
 	return correct / float(len(actual)) * 100.0
- 
+
+def accuracy_metric(actual, predicted):
+	correct = 0
+	for i in range(len(actual)):
+		if actual[i] == predicted[i]:
+			correct = correct + 1
+	return correct / float(len(actual)) * 100.0
+
+def accuracy(actual, predicted):
+  tn = 0
+  fp = 0
+  fn = 0
+  tp = 0
+  for i in range(len(actual)):
+    if actual[i] == predicted[i]:
+      if actual[i] == 1:
+        tp += 1
+      if actual[i] == 0:
+        fp += 1
+    if actual[i] != predicted[i]:
+      if actual[i] == 1:
+        fn += 1
+      else:
+        tn += 1
+    return (tp+fp)/(tp+fp+tn+fn) * 100.0
+
+def recall(actual, actual):
+  tn = 0.0
+  fp = 0.0
+  fn = 0.0
+  tp = 0.0
+  for i in range(len(actual)):
+    if actual[i] == predicted[i]:
+      if actual[i] == 1:
+        tp += 1
+      if actual[i] == 0:
+        fp += 1
+    if actual[i] != predicted[i]:
+      if actual[i] == 1:
+        fn += 1
+      else:
+        tn += 1
+    return (tp)/(tp+fn) * 100.0
+
+
+def precision(actual, predicted):
+  tn = 0.0
+  fp = 0.0
+  fn = 0.0
+  tp = 0.0
+  for i in range(len(actual)):
+    if actual[i] == predicted[i]:
+      if actual[i] == 1:
+        tp += 1
+      if actual[i] == 0:
+        fp += 1
+    if actual[i] != predicted[i]:
+      if actual[i] == 1:
+        fn += 1
+      else:
+        tn += 1
+    return (tp)/(tp+fp) * 100.0
+
+def f1(actual,predicted):
+  pre = precision(actual, predicted)
+  rec = recall(actual, predicted)
+  return (2*pre*rec)/(pre+rec)
+
+
 # Evaluate an algorithm using a cross validation split
-def evaluate_algorithm(dataset, algorithm, *args):
+def evaluate_algorithm(dataset, algorithm ,*args):
 	scores = list()
-	train_set = dataset[:500]
-	test_set = dataset[501:]
+	train_set = dataset[:576]
+	test_set = dataset[577:673]
 	predicted = algorithm(train_set, test_set, *args)
 	actual = [row[-1] for row in test_set]
 	accuracy = accuracy_metric(actual, predicted)
 	scores.append(accuracy)
 	return scores
- 
+
+# Evaluate an algorithm using a cross validation split
+def evaluate_algorithm2(train_set,test_set, algorithm,accuracy_metric, *args):
+	scores = list()
+	predicted = algorithm(train_set, test_set, *args)
+	actual = [row[-1] for row in test_set]
+	print(actual)
+	accuracy = accuracy_metric(actual, predicted)
+	scores.append(accuracy)
+	return scores
 # Make a prediction with coefficients
 def predict(row, coefficients):
 	yhat = coefficients[0]
 	for i in range(len(row)-1):
 		yhat += coefficients[i + 1] * row[i]
 	return 1.0 / (1.0 + exp(-yhat))
- 
+
 # Estimate logistic regression coefficients using stochastic gradient descent
 def coefficients_sgd(train, l_rate, n_epoch):
 	coef = [0.0 for i in range(len(train[0]))]
@@ -74,7 +164,7 @@ def coefficients_sgd(train, l_rate, n_epoch):
 			for i in range(len(row)-1):
 				coef[i + 1] = coef[i + 1] + l_rate * error * yhat * (1.0 - yhat) * row[i]
 	return coef
- 
+
 # Linear Regression Algorithm With Stochastic Gradient Descent
 def logistic_regression(train, test, l_rate, n_epoch):
 	predictions = list()
@@ -83,13 +173,18 @@ def logistic_regression(train, test, l_rate, n_epoch):
 		yhat = predict(row, coef)
 		yhat = round(yhat)
 		predictions.append(yhat)
-	return (predictions)
- 
-# Test the logistic regression algorithm on the diabetes dataset
+	return(predictions)
+
+	# Test the logistic regression algorithm on the diabetes dataset
 seed(1)
 # load and prepare data
 filename = 'diabetes.csv'
 dataset = load_csv(filename)
+
+dataset = dataset[1:-1]
+
+train,test,val = cross_validation_split2(dataset,0.15,0.15)
+
 for i in range(len(dataset[0])):
 	str_column_to_float(dataset, i)
 # normalize
@@ -102,3 +197,11 @@ n_epoch = 100
 scores = evaluate_algorithm(dataset, logistic_regression, l_rate, n_epoch)
 print('Scores: %s' % scores)
 print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
+
+scores2 = evaluate_algorithm2(train,test,logistic_regression,accuracy, l_rate, n_epoch)
+print('Scores: %s' % scores)
+print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
+
+scores3 = evaluate_algorithm2(train,val,logistic_regression,precision, l_rate, n_epoch)
+print('Scores: %s' % scores)
+print('Mean Recall: %.3f%%' % (sum(scores)/float(len(scores))))
