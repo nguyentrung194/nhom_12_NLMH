@@ -38,8 +38,6 @@ def normalize_dataset(dataset, minmax):
 		for i in range(len(row)):
 			row[i] = (row[i] - minmax[i][0]) / (minmax[i][1] - minmax[i][0])
 
-
-
 def cross_validation_split2(dataset, test_rate, val_rate):
   random.shuffle(dataset)
   size=len(dataset)
@@ -50,14 +48,6 @@ def cross_validation_split2(dataset, test_rate, val_rate):
   val = dataset[test_size:-1]
   return train,test,val
 
-# Calculate accuracy percentage
-def accuracy_metric(actual, predicted):
-	correct = 0
-	for i in range(len(actual)):
-		if actual[i] == predicted[i]:
-			correct += 1
-	return correct / float(len(actual)) * 100.0
-
 def accuracy_metric(actual, predicted):
 	correct = 0
 	for i in range(len(actual)):
@@ -66,83 +56,74 @@ def accuracy_metric(actual, predicted):
 	return correct / float(len(actual)) * 100.0
 
 def accuracy(actual, predicted):
-  tn = 0
-  fp = 0
-  fn = 0
-  tp = 0
-  for i in range(len(actual)):
-    if actual[i] == predicted[i]:
-      if actual[i] == 1:
-        tp += 1
-      if actual[i] == 0:
-        fp += 1
-    if actual[i] != predicted[i]:
-      if actual[i] == 1:
-        fn += 1
-      else:
-        tn += 1
-    return (tp+fp)/(tp+fp+tn+fn) * 100.0
+	tn = 0
+	fp = 0
+	fn = 0
+	tp = 0
+	for i in range(len(actual)):
+		if actual[i] == predicted[i]:
+			if predicted[i] == 1:
+				tp += 1
+			if predicted[i] == 0:
+				tn += 1
+		if actual[i] != predicted[i]:
+			if predicted[i] == 1:
+				fp += 1
+			else:
+				fn += 1
+	return (tp+tn)/(tp+fp+tn+fn) * 100.0
 
-def recall(actual, actual):
-  tn = 0.0
-  fp = 0.0
-  fn = 0.0
-  tp = 0.0
-  for i in range(len(actual)):
-    if actual[i] == predicted[i]:
-      if actual[i] == 1:
-        tp += 1
-      if actual[i] == 0:
-        fp += 1
-    if actual[i] != predicted[i]:
-      if actual[i] == 1:
-        fn += 1
-      else:
-        tn += 1
-    return (tp)/(tp+fn) * 100.0
+def recall(actual, predicted):
+	tn = 0.0
+	fp = 0.0
+	fn = 0.0
+	tp = 0.0
+	for i in range(len(actual)):
+		if actual[i] == predicted[i]:
+			if predicted[i] == 1:
+				tp += 1
+			if predicted[i] == 0:
+				tn += 1
+		if actual[i] != predicted[i]:
+			if predicted[i] == 1:
+				fp += 1
+			else:
+				fn += 1
+	print(tn)
+	print(fp)
+	print(fn)
+	print(tp)
+	return (tp)/(tp+fn) * 100.0
 
 
 def precision(actual, predicted):
-  tn = 0.0
-  fp = 0.0
-  fn = 0.0
-  tp = 0.0
-  for i in range(len(actual)):
-    if actual[i] == predicted[i]:
-      if actual[i] == 1:
-        tp += 1
-      if actual[i] == 0:
-        fp += 1
-    if actual[i] != predicted[i]:
-      if actual[i] == 1:
-        fn += 1
-      else:
-        tn += 1
-    return (tp)/(tp+fp) * 100.0
+	tn = 0.0
+	fp = 0.0
+	fn = 0.0
+	tp = 0.0
+	for i in range(len(actual)):
+		if actual[i] == predicted[i]:
+			if predicted[i] == 1:
+				tp += 1
+			if predicted[i] == 0:
+				tn += 1
+		if actual[i] != predicted[i]:
+			if predicted[i] == 1:
+				fp += 1
+			else:
+				fn += 1
+	return (tp)/(tp+fp) * 100.0
 
 def f1(actual,predicted):
-  pre = precision(actual, predicted)
-  rec = recall(actual, predicted)
-  return (2*pre*rec)/(pre+rec)
-
-
-# Evaluate an algorithm using a cross validation split
-def evaluate_algorithm(dataset, algorithm ,*args):
-	scores = list()
-	train_set = dataset[:576]
-	test_set = dataset[577:673]
-	predicted = algorithm(train_set, test_set, *args)
-	actual = [row[-1] for row in test_set]
-	accuracy = accuracy_metric(actual, predicted)
-	scores.append(accuracy)
-	return scores
+	pre = precision(actual, predicted)
+	rec = recall(actual, predicted)
+	return (2*pre*rec)/(pre+rec)
 
 # Evaluate an algorithm using a cross validation split
 def evaluate_algorithm2(train_set,test_set, algorithm,accuracy_metric, *args):
 	scores = list()
 	predicted = algorithm(train_set, test_set, *args)
 	actual = [row[-1] for row in test_set]
-	print(actual)
 	accuracy = accuracy_metric(actual, predicted)
 	scores.append(accuracy)
 	return scores
@@ -173,7 +154,7 @@ def logistic_regression(train, test, l_rate, n_epoch):
 		yhat = predict(row, coef)
 		yhat = round(yhat)
 		predictions.append(yhat)
-	return(predictions)
+	return (predictions)
 
 	# Test the logistic regression algorithm on the diabetes dataset
 seed(1)
@@ -187,21 +168,25 @@ train,test,val = cross_validation_split2(dataset,0.15,0.15)
 
 for i in range(len(dataset[0])):
 	str_column_to_float(dataset, i)
+
 # normalize
 minmax = dataset_minmax(dataset)
 normalize_dataset(dataset, minmax)
+
 # evaluate algorithm
-# Pregnancies,Glucose,BloodPressure,SkinThickness,Insulin,BMI,DiabetesPedigreeFunction,Age,Outcome
 l_rate = 0.1
 n_epoch = 100
-scores = evaluate_algorithm(dataset, logistic_regression, l_rate, n_epoch)
-print('Scores: %s' % scores)
-print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
 
-scores2 = evaluate_algorithm2(train,test,logistic_regression,accuracy, l_rate, n_epoch)
-print('Scores: %s' % scores)
-print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
+scores2 = evaluate_algorithm2(train, test, logistic_regression, accuracy, l_rate, n_epoch)
+print('Mean Accuracy: %.3f%%' % (sum(scores2)/float(len(scores2))))
 
-scores3 = evaluate_algorithm2(train,val,logistic_regression,precision, l_rate, n_epoch)
-print('Scores: %s' % scores)
-print('Mean Recall: %.3f%%' % (sum(scores)/float(len(scores))))
+scores3 = evaluate_algorithm2(train, test, logistic_regression, recall, l_rate, n_epoch)
+print('Recall: %.3f%%' % (sum(scores3)/float(len(scores3))))
+
+scores4 = evaluate_algorithm2(train, test, logistic_regression,precision, l_rate, n_epoch)
+print('Precision: %.3f%%' % (sum(scores4)/float(len(scores4))))
+
+scores5 = evaluate_algorithm2(train,test,logistic_regression, f1, l_rate, n_epoch)
+print('F1: %.3f%%' % (sum(scores5)/float(len(scores5))))
+
+# Pregnancies,Glucose,BloodPressure,SkinThickness,Insulin,BMI,DiabetesPedigreeFunction,Age,Outcome
