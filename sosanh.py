@@ -3,14 +3,22 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 from sklearn.model_selection import train_test_split
+
+from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import plot_confusion_matrix
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import Perceptron
+
 
 dataset = pd.read_csv('diabetes.csv')
 x = dataset.drop("Outcome",axis=1)
 y = dataset["Outcome"]
 
-train_ratio = 0.75
+train_ratio = 0.7
 validation_ratio = 0.15
 test_ratio = 0.15
 
@@ -23,11 +31,6 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=1 - train_ra
 x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=test_ratio/(test_ratio + validation_ratio)) 
 
 print(x_train, x_val, x_test)
-
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.linear_model import Perceptron
 
 models = {
           "Logistic Regression": LogisticRegression(), 
@@ -49,10 +52,10 @@ def fit_and_score(models, x_train, x_test, y_train, y_test):
 
 model_scores = fit_and_score(models=models,x_train=x_train,x_test=x_test,y_train=y_train,y_test=y_test)
 
-print('Kết quả thực hiện trên tập validation')
+print('Kết quả thực hiện trên tập test')
 model_scores[0]
 
-print('Kết quả thực hiện trên tập test')
+print('Kết quả thực hiện trên tập validation')
 model_scores[1]
 
 model= LogisticRegression()
@@ -65,7 +68,6 @@ model1.fit(x_train,y_train)
 model2.fit(x_train,y_train)
 model3.fit(x_train,y_train)
 
-from sklearn.metrics import precision_recall_fscore_support
 
 y_pred_test1 = model.predict(x_test)
 y_pred_test2 = model1.predict(x_test)
@@ -75,11 +77,6 @@ y_pred_val1 = model.predict(x_val)
 y_pred_val2 = model1.predict(x_val)
 y_pred_val3 = model2.predict(x_val)
 y_pred_val4 = model3.predict(x_val)
-
-from sklearn.datasets import make_classification
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, classification_report, confusion_matrix
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import plot_confusion_matrix
 
 print('Ket qua hoi quy tuyen tinh tren tap test')
 plot_confusion_matrix(model,x_test,y_test)
